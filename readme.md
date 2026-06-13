@@ -2,13 +2,11 @@
 
 
 
-![](https://github.com/INNO-MAKER/CAM-OV5647/raw/main/picture/background.jpg)
-
 ## 1. **General**
 
 CAM-OV5647 is a low-cost wider field view camera module, designed for whole series Raspberry(P4/Pi3 B+/PI3 A+/PI3/PI ZERO/PI ZERO 2W/CM4/CM3+). The CAM-OV5647 has a 5 M Pixel sensor, and connects via a ribbon cable to the CSI connector on the Raspberry Pi. The video and still image quality is better than a USB webcam of similar price.
 
-CAM-OV5647 is a Plug and Play device, driver-free. Support  libcamera and  Raspicam.
+CAM-OV5647 is a Plug and Play device, driver-free. Support  libcamera and  Rpicam.
 
 ## 2. **Features** 
 
@@ -78,135 +76,77 @@ https://www.raspberrypi.com/documentation/accessories/camera.html#binary-package
 
 
 
-### 4.1Libcamera-hello
+### 4.1 Rpicam-apps / Libcamera
 
-libcamera-hello is the equivalent of a "hello world" application for the camera. It starts the camera, displays a preview window.
+libcamera is an open source Linux community project. More information is available at the [libcamera website](https://libcamera.org/):
 
-#### 4.1.1 Preview
-
-Use below command to start the preview.
-
-```
-libcamera-hello -t 0
-```
-
-#### 4.1.2 Set the Framerate
-
-Use below command to set the camera frame rate, the maximum of OV5647 sensor is 30 fpts.
-
-```
-libcamera-hello --framerate 30
-```
-
-------
-
-
-
-### 4.2 Test the Framerate
-
-Use below tools can test the current frame rate of camera module.
-
-```
-v4l2-ctl --stream-mmap --stream-count=-1 -d /dev/video0 --stream-to=/dev/null
-```
-
-------
-
-
-
-## 5. **Raspicam** **Description** 
-
-Please not that this functionality is deprecated and will not be supported for future development.
-
-### 5.1 Enable Camera On Legacy
-
-#### 5.1.1 raspi-config
-
- Open the raspi-config tool when you first set up your Raspberry Pi on Legacy
-
-```
-sudo raspi-config
-```
-
-#### 5.1.2 Camera Interface Enable
-
-Select ‘Interfacing Options’ → ‘Camera’ →'Yes'→'Finish'
-
-------
-
-
-
-### 5.2 Enable Camera On Bullseyes
-
-#### 5.2.1 raspi-config
-
- Open the raspi-config tool when you first set up your Raspberry Pi on Bullseyes
-
-```
-sudo raspi-config
-```
-
-#### 5.2.2 Camera Interface Enable
-
-Select ‘Interfacing Options’ → 
-
-‘I1 Legacy Camera Enable/disable legacy camera support’ →'Yes'→'Finish'
-
-
-
-------
-
-
-
-### 5.3 Take a Photo
-
-raspistill is the command line tool for capturing still photographs with a Raspberry Pi camera module.
-
-#### 5.3.1 Take a picture name ‘test’.
-
-```
-raspistill -o test.jpg
-```
-
-#### 5.3.2 Take a picture name ‘test’ with resolution 640*480
-
-```
-raspistill -o test.jpg -w 640 -h 480
-```
+https://libcamera.org/
 
  
 
-#### 5.3.3 Take a picture name ‘test’ after 10 seconds(10000ms).
+The libcamera source code can be found and checked out from the [official libcamera repository](https://git.linuxtv.org/libcamera.git/).
+
+https://git.linuxtv.org/libcamera.git/
+
+ 
+
+Raspberry Pi OS Bookworm renamed the camera capture applications from libcamera-* to 
+
+rpicam-*. Symbolic links allow users to use the old names for now. Adopt the new application names as soon as possible. Raspberry Pi OS versions prior to Bookworm still use the libcamera-* name.
+
+https://www.raspberrypi.com/documentation/computers/camera_software.html#rpicam-apps
+
+https://github.com/raspberrypi/rpicam-apps
+
+#### 4.1.1 Preview
+
+#### 4.1.1 Camera Information
+
+The CAM-OV5647 camera does not require adding `dtoverlay`, as the system will automatically detect it. Once the camera is properly connected, you can view the camera information using the following command.
 
 ```
-raspistill -t 10000 -o test.jpg
+rpicam-hello --list-cameras
 ```
 
-#### 5.3.4 Take a picture name ‘test’ with PNG format(raw date) . If will take more time to save.
+```
+pi@raspberrypi:~ $ rpicam-hello --list-cameras
+Available cameras
+-----------------
+0 : ov5647 [2592x1944 10-bit GBRG] (/base/axi/pcie@1000120000/rp1/i2c@80000/ov5647@36)
+    Modes: 'SGBRG10_CSI2P' : 640x480 [58.92 fps - (16, 0)/2560x1920 crop]
+                             1296x972 [46.34 fps - (0, 0)/2592x1944 crop]
+                             1920x1080 [32.81 fps - (348, 434)/1928x1080 crop]
+                             2592x1944 [15.63 fps - (0, 0)/2592x1944 crop]
 
 ```
-raspistill -o test.png -e png
-```
 
-------
+#### 4.1.1 Camera Preview
 
-
-
-### 5.4 Take a Video
-
-raspivid is the command line tool for capturing video with a Raspberry Pi camera module.
-
-#### 5.4.1 Take a 10s(10000ms) video name ‘test’.
+The following command can be used to directly open the camera preview.  Two cameras can be opened simultaneously.
 
 ```
-raspivid -o test.h264 -t 10000
+rpicam-hello -t 0 
 ```
 
-####  5.4.2 Take a 10s(10000ms) video name ‘test’ with resolution 1280*720’.
+#### 4.1.2 Configuring Camera Mode
+
+You can use the result of --list-cameras, and then specify the camera operating mode with the --mode option in a colon-separated format:
+
+<width>:<height>:<bit-depth>:<packing>
+
+If the values you provide do not match exactly, the system will select the closest available option for the sensor. You can use either packed (P) or unpacked (U) packing formats. This affects the format of stored video and still images, but it does not affect the format of frames passed to the preview window. 
+
+Based on the information shown by the `rpicam-hello --list-cameras` command, set the camera to 
+
+2592(W) × 1944(H) × 10bit @ 15.63 fps mode 
 
 ```
-raspivid -o test.h264 -t 10000 -w 1280 -h 720
+rpicam-still --viewfinder-mode 2592:1944:10 --framerate 15.63 -t 0
 ```
 
-------
+640(W) × 480(H) × 10bit @ 58.92 fps mode 
+
+```
+rpicam-still --viewfinder-mode 640:480:10 --framerate 58.92 -t 0
+```
 
